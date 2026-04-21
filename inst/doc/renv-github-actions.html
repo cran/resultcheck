@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Automated Testing with GitHub Actions</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Automated Testing with GitHub Actions</h1>
+
+
+
+<p>This vignette shows how to combine <code>resultcheck</code>,
+<code>testthat</code>, <code>renv</code>, and a GitHub Actions workflow
+into a fully automated reproducibility pipeline. The goal is to make
+every push to your repository trigger a test run that fails loudly
+whenever any analysis result drifts from its committed snapshot — across
+all three major operating systems.</p>
+<p>For a real-world example of this pattern in action, see the <a href="https://github.com/IMFPaper/IMF">IMF replication
+repository</a>.</p>
+<hr />
+<div id="why-each-piece-matters" class="section level2">
+<h2>Why each piece matters</h2>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>resultcheck</code></td>
+<td>Captures named snapshots of R objects; errors in CI when a snapshot
+changes</td>
+</tr>
+<tr class="even">
+<td><code>testthat</code></td>
+<td>Test harness that runs the snapshots and reports failures</td>
+</tr>
+<tr class="odd">
+<td><code>renv</code></td>
+<td>Locks every package to an exact version so the environment is
+reproducible</td>
+</tr>
+<tr class="even">
+<td>GitHub Actions</td>
+<td>Runs the test suite automatically on push/PR across Windows, macOS,
+and Linux</td>
+</tr>
+</tbody>
+</table>
+<p>Without <code>renv</code>, a routine package update could silently
+change a coefficient or table. Without snapshots, tests would not catch
+numerical drift. Without multi-OS CI, platform-specific floating-point
+differences would go unnoticed.</p>
+<hr />
+</div>
+<div id="step-1-project-layout" class="section level2">
+<h2>Step 1 — Project layout</h2>
+<p>A minimal project that uses this workflow looks like:</p>
+<pre><code>myproject/
+├── .Rprofile                   # auto-activates renv
+├── renv.lock                   # locked package versions (committed)
+├── renv/                       # renv internals (mostly gitignored)
+├── _resultcheck.yml             # marks the project root
+├── data/
+│   └── panel_data.rds
+├── code/
+│   └── analysis.R              # your analysis script
+├── tests/_resultcheck_snaps/     # committed snapshot files
+│   └── analysis/
+│       └── main_model.md
+└── tests/
+    └── testthat/
+        └── test-analysis.R</code></pre>
+<p>The <code>_resultcheck.yml</code> file at the root can be empty — its
+presence is enough for <code>find_root()</code> to locate the
+project:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># _resultcheck.yml</span></span></code></pre></div>
+<hr />
+</div>
+<div id="step-2-initialise-renv" class="section level2">
+<h2>Step 2 — Initialise renv</h2>
+<p>Inside R, with your project open:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;renv&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">init</span>()</span></code></pre></div>
+<p>Install the packages your project needs, then snapshot the
+environment:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">install</span>(<span class="fu">c</span>(<span class="st">&quot;resultcheck&quot;</span>, <span class="st">&quot;testthat&quot;</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co"># ... install any other packages your analysis uses ...</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">snapshot</span>()</span></code></pre></div>
+<p>Commit both <code>.Rprofile</code> and <code>renv.lock</code>. The
+<code>renv/</code> folder should be partially ignored according to
+renv’s own <code>.gitignore</code> (created automatically by
+<code>renv::init()</code>).</p>
+<hr />
+</div>
+<div id="step-3-add-snapshots-to-your-analysis-script" class="section level2">
+<h2>Step 3 — Add snapshots to your analysis script</h2>
+<p>Call <code>resultcheck::snapshot()</code> on every object whose value
+matters for reproducibility. The first time you run the script
+interactively the snapshot is saved; on all subsequent runs it is
+compared against the saved version.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># code/analysis.R</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>data  <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;data/panel_data.rds&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2, <span class="at">data =</span> data)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model,  <span class="st">&quot;main_model&quot;</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(data,   <span class="st">&quot;panel_data&quot;</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co"># ... continue writing outputs ...</span></span></code></pre></div>
+<p>Run the script interactively once to generate the <code>.md</code>
+snapshot files, review them, then commit them to version control.</p>
+<hr />
+</div>
+<div id="step-4-write-a-testthat-test" class="section level2">
+<h2>Step 4 — Write a testthat test</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># tests/testthat/test-analysis.R</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">library</span>(testthat)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">library</span>(resultcheck)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;analysis produces stable results&quot;</span>, {</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  sandbox <span class="ot">&lt;-</span> <span class="fu">setup_sandbox</span>(<span class="st">&quot;data&quot;</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="fu">on.exit</span>(<span class="fu">cleanup_sandbox</span>(sandbox), <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="co"># snapshot() inside run_in_sandbox() errors on any mismatch</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="fu">expect_true</span>(<span class="fu">run_in_sandbox</span>(<span class="st">&quot;code/analysis.R&quot;</span>, sandbox))</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>})</span></code></pre></div>
+<p>Run locally to confirm everything passes before pushing:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">&quot;tests/testthat&quot;</span>)</span></code></pre></div>
+<p>For package examples and quick demos, you can avoid writing into your
+current project by wrapping code in
+<code>resultcheck::with_example({...})</code>, which creates a temporary
+project in <code>tempdir()</code> and cleans it up automatically.</p>
+<hr />
+</div>
+<div id="step-5-github-actions-workflow" class="section level2">
+<h2>Step 5 — GitHub Actions workflow</h2>
+<p>Create <code>.github/workflows/run-tests.yml</code>. The key
+ingredients are:</p>
+<ul>
+<li><strong>Matrix strategy</strong> — runs on Windows, macOS, and
+Ubuntu so platform-specific numerical differences are caught early.</li>
+<li><strong>OS-specific system libraries</strong> — packages such as
+<code>ragg</code>, <code>xml2</code>, or <code>curl</code> need native
+libraries on Linux and macOS that are not required on Windows.</li>
+<li><strong>renv cache</strong> —
+<code>r-lib/actions/setup-renv@v2</code> restores the <code>renv</code>
+cache between runs, avoiding re-installing hundreds of packages on every
+push.</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R Tests</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> main </span><span class="kw">]</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> main </span><span class="kw">]</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="at">  </span><span class="fu">workflow_dispatch</span><span class="kw">:</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="at">  </span><span class="fu">test</span><span class="kw">:</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="at">      </span><span class="fu">fail-fast</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="at">        </span><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span><span class="kw">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span><span class="kw">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span><span class="kw">}</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="at">    </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="at">      </span><span class="fu">GITHUB_PAT</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="at">      </span><span class="fu">R_KEEP_PKG_SOURCE</span><span class="kw">:</span><span class="at"> </span><span class="ch">yes</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Checkout repository</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Setup R</span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r@v2</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="at">          </span><span class="fu">use-public-rspm</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">      # ── Linux system libraries ──────────────────────────────────────────</span></span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install system dependencies (Linux)</span></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> runner.os == &#39;Linux&#39;</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>          sudo apt-get update</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>          sudo apt-get install -y \</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>            libcurl4-openssl-dev \</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>            libssl-dev \</span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>            libxml2-dev \</span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>            libfontconfig1-dev \</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>            libharfbuzz-dev \</span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>            libfribidi-dev \</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>            libfreetype6-dev \</span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>            libpng-dev \</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>            libtiff5-dev \</span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>            libjpeg-dev</span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a></span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a><span class="co">      # ── macOS system libraries ───────────────────────────────────────────</span></span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install system dependencies (macOS)</span></span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> runner.os == &#39;macOS&#39;</span></span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>          set -euxo pipefail</span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>          brew update</span>
+<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>          brew install pkg-config libpng cairo freetype harfbuzz fribidi</span>
+<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a></span>
+<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a>          BREW_PREFIX=&quot;$(brew --prefix)&quot;</span>
+<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a>          echo &quot;SDKROOT=$(xcrun --sdk macosx --show-sdk-path)&quot; &gt;&gt; $GITHUB_ENV</span>
+<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a>          echo &quot;PATH=${BREW_PREFIX}/bin:${PATH}&quot;               &gt;&gt; $GITHUB_ENV</span>
+<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a>          echo &quot;PKG_CONFIG_PATH=${BREW_PREFIX}/lib/pkgconfig:$(brew --prefix libpng)/lib/pkgconfig&quot; &gt;&gt; $GITHUB_ENV</span>
+<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a></span>
+<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a>          mkdir -p ~/.R</span>
+<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a>          PNG_CFLAGS=&quot;$(pkg-config --cflags libpng)&quot;</span>
+<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a>          PNG_LIBS=&quot;$(pkg-config --libs   libpng)&quot;</span>
+<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a>          {</span>
+<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a>            echo &quot;CPPFLAGS += -I${BREW_PREFIX}/include&quot;</span>
+<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a>            echo &quot;LDFLAGS  += -L${BREW_PREFIX}/lib -Wl,-rpath,${BREW_PREFIX}/lib&quot;</span>
+<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a>            echo &quot;PKG_CPPFLAGS += ${PNG_CFLAGS}&quot;</span>
+<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a>            echo &quot;PKG_LIBS     += ${PNG_LIBS}&quot;</span>
+<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a>          } &gt;&gt; ~/.R/Makevars</span>
+<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a></span>
+<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a><span class="co">      # ── Restore renv cache (fast!) ───────────────────────────────────────</span></span>
+<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Restore renv packages</span></span>
+<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-renv@v2</span></span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a><span class="at">          </span><span class="fu">cache-version</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a></span>
+<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a><span class="co">      # ── Run tests ────────────────────────────────────────────────────────</span></span>
+<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run tests</span></span>
+<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> Rscript -e &quot;testthat::test_dir(&#39;tests/testthat&#39;)&quot;</span></span>
+<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a></span>
+<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload test artefacts on failure</span></span>
+<span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> failure()</span></span>
+<span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v4</span></span>
+<span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> test-results-${{ matrix.config.os }}</span></span>
+<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> tests/testthat/*.Rout*</span></span></code></pre></div>
+<div id="how-setup-renv-caching-works" class="section level3">
+<h3>How <code>setup-renv</code> caching works</h3>
+<p><code>r-lib/actions/setup-renv@v2</code> reads your
+<code>renv.lock</code> file, computes a cache key from its hash, and
+restores a previously saved cache of installed packages before calling
+<code>renv::restore()</code>. When the lock file has not changed, all
+packages are served from the cache and <code>renv::restore()</code>
+completes in seconds rather than minutes.</p>
+<p>Increment <code>cache-version</code> (e.g. from <code>2</code> to
+<code>3</code>) whenever you want to force a full re-install — for
+example after an OS upgrade or when debugging a strange linking
+error.</p>
+<hr />
+</div>
+</div>
+<div id="step-6-snapshot-lifecycle-on-ci" class="section level2">
+<h2>Step 6 — Snapshot lifecycle on CI</h2>
+<pre><code>Developer                         CI runner
+─────────                         ─────────
+1. Edit analysis.R
+2. Run interactively → snapshots
+   generated / updated
+3. Review diffs, accept changes
+4. git add tests/_resultcheck_snaps/
+   git commit &amp;&amp; git push
+                                  5. Workflow triggered
+                                  6. renv::restore() (from cache)
+                                  7. testthat::test_dir()
+                                     └─ run_in_sandbox(&quot;code/analysis.R&quot;)
+                                        └─ snapshot() in *testing mode*
+                                           ✓ matches committed file → pass
+                                           ✗ differs             → FAIL</code></pre>
+<p>CI never updates snapshots; it only enforces them. To accept a
+legitimate result change, always re-run the script interactively,
+confirm the diff, and commit the updated <code>.md</code> files.</p>
+<hr />
+</div>
+<div id="handling-platform-differences" class="section level2">
+<h2>Handling platform differences</h2>
+<p>When the same computation yields slightly different floating-point
+values on different operating systems, use the mechanisms described in
+<code>vignette(&quot;snapshot-tolerance&quot;)</code>:</p>
+<ul>
+<li><strong><code>[ignored]</code> markers</strong> — replace a volatile
+line in the snapshot file with the literal text <code>[ignored]</code>.
+That line position is skipped on every platform.</li>
+<li><strong><code>snapshot.precision</code></strong> — add a
+<code>precision</code> key to <code>_resultcheck.yml</code> to round all
+floating-point numbers before comparison:</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># _resultcheck.yml</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">snapshot</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="at">  </span><span class="fu">precision</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span></code></pre></div>
+<p>Either option lets CI pass on all platforms without losing the safety
+net on the lines that do matter.</p>
+<hr />
+</div>
+<div id="tips" class="section level2">
+<h2>Tips</h2>
+<ul>
+<li><strong>Commit <code>renv.lock</code> but not
+<code>renv/library/</code>.</strong> The library is rebuilt from the
+lock file on each runner; only the lock file needs to be in version
+control.</li>
+<li><strong>Keep snapshots human-readable.</strong> The <code>.md</code>
+files produced by <code>snapshot()</code> are plain text and diff well
+in pull requests — reviewers can see at a glance whether a coefficient
+changed.</li>
+<li><strong>Pin your R version</strong> in the workflow matrix
+(e.g. <code>r-version: &#39;4.4.2&#39;</code>) if minor R releases have ever
+changed your numerical results.</li>
+<li><strong><code>fail-fast: false</code></strong> lets all three OS
+jobs run to completion even when one fails, giving you a full picture of
+where the discrepancy occurs.</li>
+<li><strong><code>workflow_dispatch</code></strong> allows you to
+trigger the workflow manually from the GitHub Actions UI — useful for
+debugging without having to push a commit.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

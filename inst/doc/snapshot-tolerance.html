@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Handling Platform Differences in Snapshots</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Handling Platform Differences in
+Snapshots</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(resultcheck)</span></code></pre></div>
+<div id="the-problem-floating-point-noise-across-platforms" class="section level2">
+<h2>The problem: floating-point noise across platforms</h2>
+<p>Numerical computations in R can produce results that differ at very
+high decimal places depending on the platform, compiler, or the version
+of libraries like BLAS/LAPACK. For example, a centering attribute from
+<code>scale()</code> might be <code>2.41e-17</code> on one machine and
+<code>1.63e-17</code> on another — both are effectively zero, but a
+naïve snapshot comparison treats them as different.</p>
+<p><code>resultcheck</code> provides two complementary mechanisms to
+handle this:</p>
+<ol style="list-style-type: decimal">
+<li><strong><code>[ignored]</code> line markers</strong> — mark specific
+lines in a snapshot file as known discrepancies that should always be
+skipped.</li>
+<li><strong><code>snapshot.precision</code> in
+<code>_resultcheck.yml</code></strong> — round all floating-point
+numbers to a fixed number of decimal places before comparing or storing
+snapshots.</li>
+</ol>
+<hr />
+</div>
+<div id="feature-1-ignored-line-markers" class="section level2">
+<h2>Feature 1: <code>[ignored]</code> line markers</h2>
+<div id="how-it-works" class="section level3">
+<h3>How it works</h3>
+<p>Open any <code>.md</code> snapshot file under
+<code>tests/_resultcheck_snaps/</code> and replace the entire content of
+a volatile line with the literal text <code>[ignored]</code>. On every
+subsequent run, that line position is masked before the comparison takes
+place, so differences there will never trigger a failure. When you
+update a snapshot interactively, the <code>[ignored]</code> markers are
+automatically preserved in the new file.</p>
+</div>
+<div id="step-by-step-example" class="section level3">
+<h3>Step-by-step example</h3>
+<p>Suppose your <code>PCA.R</code> script produces a snapshot that
+includes lines like:</p>
+<pre><code>  ..- attr(*, &quot;scaled:center&quot;)= num 2.41e-17
+  ..- attr(*, &quot;scaled:center&quot;)= num 2.98e-17</code></pre>
+<p>and these values fluctuate slightly between platforms. Open the
+snapshot file at
+<code>tests/_resultcheck_snaps/PCA/panel_data_pca.md</code> and change
+those specific lines to:</p>
+<pre><code>[ignored]
+[ignored]</code></pre>
+<p>Save the file. The snapshot now looks like this (abbreviated):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu"># Snapshot: data.frame</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">## Structure</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>&#39;data.frame&#39;:  1071 obs. of  30 variables:</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a> ...</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a> $ us : num <span class="co">[</span><span class="ot">1:1071, 1</span><span class="co">]</span> NA -0.423 -0.697 ...</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">[</span><span class="ot">ignored</span><span class="co">]</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  ..- attr(*, &quot;scaled:scale&quot;)= num 1.22</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a> $ eu : num <span class="co">[</span><span class="ot">1:1071, 1</span><span class="co">]</span> NA -0.783 -0.711 ...</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">[</span><span class="ot">ignored</span><span class="co">]</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  ..- attr(*, &quot;scaled:scale&quot;)= num 1.37</span></code></pre></div>
+<p>From now on, <code>run_in_sandbox(&quot;code/PCA.R&quot;, sandbox)</code> will
+not raise an error regardless of what those two lines contain in any new
+run, while every other line continues to be verified.</p>
+</div>
+<div id="rules" class="section level3">
+<h3>Rules</h3>
+<ul>
+<li>The <strong>entire line</strong> must be <code>[ignored]</code>
+(leading/trailing whitespace is stripped before the check, so
+indentation does not matter).</li>
+<li>Lines are matched by <strong>position</strong> within the snapshot
+file, so adding or removing other lines shifts the positions. If the
+overall structure of the output changes materially, update the snapshot
+interactively first, then re-apply the <code>[ignored]</code> markers to
+the new file.</li>
+<li><code>[ignored]</code> markers are <strong>preserved
+automatically</strong> when you update a snapshot:
+<code>resultcheck</code> copies each <code>[ignored]</code> line from
+the stored snapshot into the freshly generated one before writing it to
+disk.</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="feature-2-numeric-precision-in-_resultcheck.yml" class="section level2">
+<h2>Feature 2: Numeric precision in <code>_resultcheck.yml</code></h2>
+<div id="how-it-works-1" class="section level3">
+<h3>How it works</h3>
+<p>Add a <code>snapshot.precision</code> key to the
+<code>_resultcheck.yml</code> file at the root of your project. Before
+storing or comparing a snapshot, every floating-point number in the text
+representation is rounded to that many decimal places. Integer-like
+tokens (e.g. index ranges such as <code>[1:1071]</code>) are left
+unchanged.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># _resultcheck.yml</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">snapshot</span><span class="kw">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="at">  </span><span class="fu">precision</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span></code></pre></div>
+<p>With <code>precision: 10</code>, both <code>2.41e-17</code> and
+<code>1.63e-17</code> round to <code>0</code>, so the snapshots compare
+as equal.</p>
+</div>
+<div id="step-by-step-example-1" class="section level3">
+<h3>Step-by-step example</h3>
+<ol style="list-style-type: decimal">
+<li><p>Add <code>precision</code> to <code>_resultcheck.yml</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">snapshot</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="at">  </span><span class="fu">precision</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span></code></pre></div></li>
+<li><p>Delete the outdated snapshot (or run interactively and accept the
+update when prompted) so that the stored file is regenerated with
+rounded values.</p></li>
+<li><p>Re-run the script via <code>run_in_sandbox()</code>. The
+comparison will now succeed whenever the effective difference is smaller
+than <code>0.5 × 10^{-precision}</code>.</p></li>
+</ol>
+</div>
+<div id="choosing-a-precision-value" class="section level3">
+<h3>Choosing a precision value</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Suggested precision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Machine-epsilon noise (<code>1e-15</code> to
+<code>1e-17</code>)</td>
+<td>10</td>
+</tr>
+<tr class="even">
+<td>Monte-Carlo / bootstrap variance</td>
+<td>4–6</td>
+</tr>
+<tr class="odd">
+<td>Monetary amounts (cents)</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>A higher value is more sensitive (closer to exact comparison); a
+lower value is more forgiving.</p>
+</div>
+<div id="backward-compatibility" class="section level3">
+<h3>Backward compatibility</h3>
+<p>If your project already has snapshot files stored before
+<code>precision</code> was configured, <code>resultcheck</code> also
+rounds the <strong>stored</strong> snapshot numbers during comparison.
+This means setting <code>precision</code> will immediately suppress
+floating-point noise in existing snapshots without needing to regenerate
+them.</p>
+<hr />
+</div>
+</div>
+<div id="using-both-features-together" class="section level2">
+<h2>Using both features together</h2>
+<p>The two features are independent and compose naturally:</p>
+<ul>
+<li>Use <strong><code>[ignored]</code></strong> when a line’s value is
+entirely unreliable across runs (e.g. a random seed, a memory address,
+or a platform-specific constant that carries no scientific
+meaning).</li>
+<li>Use <strong><code>precision</code></strong> when values are
+meaningful but may differ in the last few decimal places due to
+floating-point arithmetic.</li>
+</ul>
+<p>For the PCA example in the problem statement, either approach
+resolves the failure. Using <code>precision: 10</code> is the
+lower-maintenance option because it requires no manual edits to snapshot
+files; <code>[ignored]</code> offers surgical control when only a
+handful of lines are volatile while the rest must be exact.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
