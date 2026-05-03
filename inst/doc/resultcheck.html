@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Introduction to resultcheck</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to resultcheck</h1>
+
+
+
+<p>For academic researchers and data scientists using R, a common
+problem is that <strong>the same code does not always produce the same
+results</strong>.</p>
+<p>Sometimes the difference is obvious. In worse cases, it happens
+silently — and you only notice much later, after results have been
+shared, revised, or even published.</p>
+<p>Following best practices — such as clearing your workspace, using
+version control, and maintaining a clear project structure — can reduce
+this risk. I’ve written more about these workflows in this <a href="https://opensource.posit.co/blog/2026-04-13_reproducible-research-renv-quarto-github/">blog
+post</a>.</p>
+<p>In practice, results can change due to:</p>
+<ol style="list-style-type: decimal">
+<li>implicit randomness</li>
+<li>non-deterministic computation (e.g. parallelization)</li>
+<li>changes in underlying data (e.g. APIs or databases)</li>
+<li>package updates or dependency changes (even when using tools like
+<code>renv</code>)</li>
+<li>platform differences (e.g. floating-point precision, OS-specific
+behaviour)</li>
+</ol>
+<p>These issues make it difficult to detect when results have changed —
+and even harder to manage in <em>collaborative</em> projects.</p>
+<p><code>resultcheck</code> is designed to address this problem by
+letting you <strong>explicitly track and verify key results</strong> as
+your analysis evolves. Instead of tracking code,
+<code>resultcheck</code> tracks the <strong>R objects created during
+your analysis</strong>.</p>
+<p><code>resultcheck</code> is intended to be used <em>alongside</em>
+version control (e.g. Git), so that snapshots can be tracked, shared,
+and verified across collaborators.</p>
+<p>The following sections walk through a typical workflow and show how
+<code>resultcheck</code> helps you detect and manage changes in your
+results.</p>
+<div id="a-typical-workflow" class="section level2">
+<h2>A typical workflow</h2>
+<p><code>resultcheck</code> fits into your analysis workflow as
+follows:</p>
+<ol style="list-style-type: decimal">
+<li>Write your analysis</li>
+<li>Add <code>snapshot()</code> calls to key results</li>
+<li>Run once → snapshots are recorded</li>
+<li>Commit snapshots to Git</li>
+<li>Re-run code (locally or in CI)</li>
+<li>If results change → tests fail</li>
+</ol>
+<p>At that point, you decide:</p>
+<ul>
+<li>update the snapshot (if the change is expected), or</li>
+<li>investigate further (if the change is unexpected)</li>
+</ul>
+<p>This allows you to detect unintended changes in results as your
+analysis evolves.</p>
+</div>
+<div id="mark-project-root" class="section level2">
+<h2>Mark project root</h2>
+<p>The core idea behind <code>resultcheck</code>’s testing workflow is
+that it <em>copies</em> the files and directories you explicitly provide
+into a temporary directory, and runs the script there to mimic a clean
+environment.</p>
+<p>This means you need to list any required inputs and helper files (for
+example, data files, sourced scripts, or other resources) that the
+script needs inside the sandbox. To do this reliably,
+<code>resultcheck</code> needs to know where your <strong>project
+root</strong> is.</p>
+<p>You can mark your project root by creating any of the following in
+the root directory. <code>resultcheck</code> will detect them in the
+following order:</p>
+<ol style="list-style-type: decimal">
+<li><code>_resultcheck.yml</code></li>
+<li><code>.Rproj</code></li>
+<li><code>.git</code> (created automatically when you run
+<code>git init</code>)</li>
+</ol>
+<p>You can verify that <code>resultcheck</code> has correctly identified
+your project root by running:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">find_root</span>()</span></code></pre></div>
+</div>
+<div id="optional-configure-resultcheck-settings" class="section level2">
+<h2>(Optional) Configure <code>resultcheck</code> settings</h2>
+<p>You usually do not need to modify any settings, but you can customise
+<code>resultcheck</code> using a <code>_resultcheck.yml</code> file in
+your project root.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># _resultcheck.yml</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">snapshot</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="at">  </span><span class="fu">precision</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="at">  </span><span class="fu">dir</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;tests/_resultcheck_snaps&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="at">  </span><span class="fu">method</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;print + str&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="at">  </span><span class="fu">method_defaults_file</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;snapshot-method-overrides.R&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="at">  </span><span class="fu">method_by_class</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="at">    </span><span class="fu">lm</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;summary&quot;</span></span></code></pre></div>
+<p><code>precision</code></p>
+<p>Controls how many digits are used when comparing numeric values.</p>
+<ul>
+<li>Increase this if you need higher precision</li>
+<li>Decrease this to allow for small numerical differences across
+environments</li>
+</ul>
+<p><code>dir</code></p>
+<p>Specifies where snapshot files are stored, relative to the project
+root.</p>
+<p>By default, snapshots are stored in:
+<code>tests/_resultcheck_snaps</code></p>
+</div>
+<div id="add-snapshots-to-your-analysis" class="section level2">
+<h2>Add snapshots to your analysis</h2>
+<p>The primary way to use <code>resultcheck</code> is to add
+<code>snapshot()</code> calls to your analysis script.</p>
+<p>For example, if you have a script <code>analysis.R</code> that fits a
+model:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt, <span class="at">data =</span> mtcars)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>)</span></code></pre></div>
+<p>You can also snapshot data frames, plots, tables, or any other R
+object.</p>
+<p>Snapshots can be committed and shared, allowing collaborators to
+verify that their results match yours.</p>
+<div id="first-run-creating-a-snapshot" class="section level3">
+<h3>First run: creating a snapshot</h3>
+<p>When you run the <code>snapshot()</code> line for the first time, a
+snapshot file is created. This establishes the baseline that future runs
+will be compared against.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="sc">&gt;</span> resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>Warning<span class="sc">:</span> <span class="fu">snapshot</span>() will write a snapshot file to<span class="sc">:</span> path<span class="sc">/</span>to<span class="sc">/</span>your<span class="sc">/</span>project<span class="sc">/</span>tests<span class="sc">/</span>_resultcheck_snaps<span class="sc">/</span>analysis<span class="sc">/</span>model.md</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>✓ New snapshot saved<span class="sc">:</span> analysis<span class="sc">/</span>model.md</span></code></pre></div>
+<p>The file: <code>tests/_resultcheck_snaps/analysis/model.md</code>
+contains a human-readable representation of the model object.</p>
+<p>Snapshots should be committed to <strong>version control</strong>.
+This allows you to track changes to your results over time, and
+collaborate with others without losing the ability to detect changes,
+and is needed for automated testing (see <a href="#github-tests">GitHub
+Tests</a>).</p>
+</div>
+<div id="snapshot-representation" class="section level3">
+<h3>Snapshot representation</h3>
+<p>By default, <code>snapshot()</code> resolves methods in this
+order:</p>
+<ol style="list-style-type: decimal">
+<li>explicit <code>method=</code> argument,</li>
+<li>class override from <code>_resultcheck.yml</code>
+(<code>snapshot.method_by_class</code>),</li>
+<li>global default from <code>_resultcheck.yml</code>
+(<code>snapshot.method</code>),</li>
+<li>fallback to <code>print()</code> + <code>str()</code>.</li>
+</ol>
+<p>You can override this using a function or a list of functions:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>, <span class="at">method =</span> print)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>, <span class="at">method =</span> str)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>, <span class="at">method =</span> length)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>, <span class="at">method =</span> stats<span class="sc">::</span>coef)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  model,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="st">&quot;model&quot;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">method =</span> <span class="fu">list</span>(<span class="at">summary =</span> summary, <span class="at">print =</span> print)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>)</span></code></pre></div>
+<p>In config, method strings like <code>&quot;print + str&quot;</code> or
+<code>&quot;stats::coef&quot;</code> are parsed into callable function objects
+automatically.</p>
+<p>Class defaults can also live in a separate R file:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># snapshot-method-overrides.R</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>method_by_class <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">lm =</span> <span class="st">&quot;summary&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">glm =</span> <span class="st">&quot;summary&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="tip-snapshot-before-writing-outputs" class="section level3">
+<h3>Tip: snapshot before writing outputs</h3>
+<p>If your analysis writes outputs to disk (e.g. <code>.RData</code>,
+<code>.csv</code>, tables, or plots), we recommend that you:</p>
+<ul>
+<li><strong>Create a snapshot for each important output</strong>,
+and</li>
+<li><strong>Call <code>snapshot()</code> immediately before writing the
+file</strong></li>
+</ul>
+<p>For example:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt, <span class="at">data =</span> mtcars)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co"># snapshot the object</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;main_model&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co"># then write it to disk</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">save</span>(model, <span class="at">file =</span> <span class="st">&quot;output/model.RData&quot;</span>)</span></code></pre></div>
+<p>This ensures that:</p>
+<ul>
+<li>the snapshot always reflects the <strong>latest version of the
+object</strong>, and</li>
+<li>any unintended changes are detected <strong>before they are written
+to disk</strong></li>
+</ul>
+<p>In general, it is a good idea to snapshot the same objects that you
+would consider part of your final outputs.</p>
+</div>
+<div id="subsequent-runs-comparing-against-the-snapshot" class="section level3">
+<h3>Subsequent runs: comparing against the snapshot</h3>
+<p>On subsequent runs, <code>snapshot()</code> compares the current
+value of the object against the stored snapshot.</p>
+<p>If the results match, you will see:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="sc">&gt;</span> resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>✓ Snapshot matches<span class="sc">:</span> model</span></code></pre></div>
+<p>If the results differ, you will see a message indicating the
+differences:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="sc">&gt;</span> resultcheck<span class="sc">::</span><span class="fu">snapshot</span>(model, <span class="st">&quot;model&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>Warning<span class="sc">:</span> </span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>Snapshot differences found <span class="cf">for</span><span class="sc">:</span> model</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>File<span class="sc">:</span> path<span class="sc">/</span>to<span class="sc">/</span>your<span class="sc">/</span>project<span class="sc">/</span>tests<span class="sc">/</span>_resultcheck_snaps<span class="sc">/</span>analysis<span class="sc">/</span>model.md</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>Differences<span class="sc">:</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>old[<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>] vs new[<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>]</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="st">&quot;# Snapshot: lm&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="st">&quot;&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="st">&quot;## List Structure&quot;</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="sc">-</span> <span class="st">&quot;List of 13&quot;</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="sc">+</span> <span class="st">&quot;List of 12&quot;</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="st">&quot; $ coefficients : Named num [1:2] 37.29 -5.34&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="st">&quot;  ..- attr(*, </span><span class="sc">\&quot;</span><span class="st">names</span><span class="sc">\&quot;</span><span class="st">)= chr [1:2] </span><span class="sc">\&quot;</span><span class="st">(Intercept)</span><span class="sc">\&quot;</span><span class="st"> </span><span class="sc">\&quot;</span><span class="st">wt</span><span class="sc">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="st">&quot; $ residuals    : Named num [1:32] -2.28 -0.92 -2.09 1.3 -0.2 ...&quot;</span></span></code></pre></div>
+<p>In interactive use, you will be prompted:</p>
+<pre><code>Update snapshot? (y/n):</code></pre>
+<ul>
+<li>Press <code>y</code> to update the snapshot (if the change is
+expected)</li>
+<li>Press <code>n</code> to keep the existing snapshot and investigate
+further</li>
+</ul>
+<p>In testing contexts (see <a href="#local-tests">local tests</a> and
+<a href="#github-tests">GitHub tests</a>), differences result in an
+error rather than an interactive prompt.</p>
+</div>
+</div>
+<div id="set-up-automated-tests" class="section level2">
+<h2>Set up automated tests</h2>
+<p>In practice, analyses are often not rerun once they are considered
+“finished”, unless something breaks. To ensure that results remain
+stable over time, we recommend adding <strong>automated tests</strong>
+for scripts that you do not intend to modify further.</p>
+<p><code>resultcheck</code> works naturally with <a href="https://testthat.r-lib.org/"><code>testthat</code></a> to run
+these checks automatically.</p>
+<p>For example, to test <code>analysis.R</code>, create a file
+<code>tests/testthat/test-analysis.R</code> with the following
+content:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">library</span>(testthat)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">library</span>(resultcheck)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;analysis produces stable results&quot;</span>, {</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  sandbox <span class="ot">&lt;-</span> <span class="fu">setup_sandbox</span>()</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="fu">on.exit</span>(<span class="fu">cleanup_sandbox</span>(sandbox), <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="fu">expect_true</span>(<span class="fu">run_in_sandbox</span>(<span class="st">&quot;analysis.R&quot;</span>, sandbox))</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>})</span></code></pre></div>
+<p>This test:</p>
+<ul>
+<li>creates a temporary sandbox environment</li>
+<li>runs <code>analysis.R</code> inside it</li>
+<li>fails if any snapshot differs from the stored version</li>
+</ul>
+<p>You can extend your tests to verify that your script produces the
+expected output files.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>  <span class="fu">expect_true</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>    <span class="fu">file.exists</span>(<span class="fu">file.path</span>(sandbox<span class="sc">$</span>path, <span class="st">&quot;output/regModels.RData&quot;</span>)),</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="at">info =</span> <span class="st">&quot;regModels.RData not found&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  )</span></code></pre></div>
+<p>This is useful when your analysis produces files (e.g. model objects,
+tables, or figures) that you want to ensure are created correctly.</p>
+<div id="sandbox-environment" class="section level3">
+<h3>Sandbox environment</h3>
+<p>The sandbox is a temporary directory that mimics a clean R
+session.</p>
+<p>Because your script may depend on external files (e.g. data or helper
+scripts), you need to include those files when setting up the
+sandbox.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>sandbox <span class="ot">&lt;-</span> <span class="fu">setup_sandbox</span>(<span class="st">&quot;data/weather.csv&quot;</span>)</span></code></pre></div>
+<p>You can include multiple files:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sandbox <span class="ot">&lt;-</span> <span class="fu">setup_sandbox</span>(<span class="fu">c</span>(<span class="st">&quot;data/income.csv&quot;</span>, <span class="st">&quot;data/weather.csv&quot;</span>))</span></code></pre></div>
+<p>Or entire directories:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>sandbox <span class="ot">&lt;-</span> <span class="fu">setup_sandbox</span>(<span class="st">&quot;data&quot;</span>)</span></code></pre></div>
+<p><code>resultcheck</code> will copy these files into the sandbox while
+preserving their relative structure.</p>
+</div>
+</div>
+<div id="local-tests" class="section level2">
+<h2>Running tests</h2>
+<p>You can run your tests using
+<code>testthat::test_dir(&quot;tests/testthat&quot;)</code>.</p>
+<p>If you are using <a href="https://positron.posit.co/">Positron</a>,
+you can run tests in the test pane once you have installed the <a href="https://open-vsx.org/extension/kv9898/positron-r-tester">Positron
+R Tester extension</a>. This provides a visual interface for running
+tests and inspecting results:</p>
+<div class="float">
+<img role="img" aria-label="Positron R Tester" src="data:image/png;base64,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" alt="Positron R Tester" />
+<div class="figcaption">Positron R Tester</div>
+</div>
+</div>
+<div id="github-tests" class="section level2">
+<h2>Running tests on GitHub</h2>
+<p>While you can run tests locally, it is often a good idea to run them
+automatically using <a href="https://docs.github.com/en/actions">GitHub
+Actions</a>.</p>
+<p>This is especially useful for:</p>
+<ul>
+<li><strong>Collaborative projects</strong> — tests run automatically on
+every push, helping catch unintended changes introduced by
+collaborators</li>
+<li><strong>Saving local resources</strong> — running tests (especially
+sandboxed scripts) can take time and block your current R session</li>
+</ul>
+<p>Using GitHub Actions allows tests to run in the cloud, so you don’t
+need to wait for them locally or manage multiple sessions.</p>
+<div id="what-you-need" class="section level3">
+<h3>What you need</h3>
+<p>To set this up, you will need some familiarity with:</p>
+<ul>
+<li><code>renv</code> (for managing package versions)</li>
+<li>Git and GitHub (for version control)</li>
+<li>GitHub Actions (for automation)</li>
+</ul>
+<p>These tools are generally useful for reproducible research, and we
+recommend learning them if you are not already using them.</p>
+</div>
+<div id="fully-automated-checks" class="section level3">
+<h3>Fully automated checks</h3>
+<p>Once configured, tests run automatically whenever you push changes to
+your repository.</p>
+<p>This means:</p>
+<ul>
+<li>you don’t need to remember to run tests locally</li>
+<li>failures are caught immediately</li>
+<li>your results are continuously checked in a clean environment</li>
+</ul>
+<blockquote>
+<p>Think of this as moving your tests from “something you remember to
+run” to “something that runs automatically for you.”</p>
+</blockquote>
+<p>For a full walkthrough, see:</p>
+<p><a href="renv-github-actions.html">👉 Automated Testing with GitHub
+Actions</a></p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

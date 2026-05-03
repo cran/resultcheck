@@ -1,6 +1,6 @@
 Package: resultcheck
 Title: Result Stability Checks for Empirical R Projects
-Version: 0.1.4
+Version: 0.2.0
 Authors@R: 
     person("Dianyi", "Yang", , "dianyi.yang@politics.ox.ac.uk", role = c("aut", "cre", "ctb"), comment = c(ORCID = "0009-0004-4652-3429"))
 Description: 
@@ -14,15 +14,16 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Imports: withr, rprojroot, yaml
-Suggests: knitr, rmarkdown, testthat (>= 3.0.0), waldo
+Suggests: broom, knitr, rmarkdown, rstudioapi, testthat (>= 3.0.0),
+        waldo
 URL: https://github.com/kv9898/resultcheck/,
         https://kv9898.github.io/resultcheck/
 BugReports: https://github.com/kv9898/resultcheck/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-04-14 12:24:32 UTC; Dianyi
+Packaged: 2026-05-03 10:07:56 UTC; Dianyi
 Author: Dianyi Yang [aut, cre, ctb] (ORCID:
     <https://orcid.org/0009-0004-4652-3429>)
 Maintainer: Dianyi Yang <dianyi.yang@politics.ox.ac.uk>
 Repository: CRAN
-Date/Publication: 2026-04-21 08:52:09 UTC
+Date/Publication: 2026-05-03 10:30:08 UTC

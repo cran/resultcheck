@@ -4,7 +4,7 @@
 \alias{snapshot}
 \title{Interactive Snapshot Testing}
 \usage{
-snapshot(value, name, script_name = NULL, method = c("both", "print", "str"))
+snapshot(value, name, script_name = NULL, method = NULL)
 }
 \arguments{
 \item{value}{The R object to snapshot (e.g., plot, table, model output).}
@@ -12,16 +12,16 @@ snapshot(value, name, script_name = NULL, method = c("both", "print", "str"))
 \item{name}{Character. A descriptive name for this snapshot.}
 
 \item{script_name}{Optional. The name of the script creating the snapshot.
-If NULL, attempts to auto-detect from the call stack.}
+If NULL, auto-detects via \code{rstudioapi::getSourceEditorContext()$path}
+(in RStudio), falling back to the call stack, then to \code{"interactive"}.}
 
-\item{method}{Character. Controls which serialization method(s) are used
-when capturing the snapshot. \code{"both"} (default) applies
-type-specific logic that uses both \code{print()} and \code{str()}.
-\code{"print"} uses only \code{print()}, and \code{"str"} uses only
-\code{str()}. Use \code{"print"} or \code{"str"} when one of the
-methods produces volatile output that should be excluded from the
-snapshot (e.g. objects that embed session-specific paths or IDs in
-their \code{str()} representation).}
+\item{method}{Optional function or non-empty list of functions used to
+serialize \code{value}. Functions are executed in order and each section
+header is taken from the method expression or list name. If omitted,
+method defaults are resolved in this order:
+\code{snapshot.method_by_class} (matched by object class), then
+\code{snapshot.method}, then
+\code{list(print = base::print, str = utils::str)}.}
 }
 \value{
 Invisible TRUE if snapshot matches or was updated.
@@ -39,14 +39,29 @@ run_in_sandbox), throws an error if snapshot doesn't exist or doesn't match.
 
 Snapshots are stored under \code{tests/_resultcheck_snaps/} by default,
 organized by script name, and configurable via \code{snapshot.dir} in
-\code{_resultcheck.yml}.
+\code{_resultcheck.yml}. Method defaults can be configured via
+\code{snapshot.method} and class-specific defaults via
+\code{snapshot.method_by_class}. Optional class defaults can also be loaded
+from an R file using \code{snapshot.method_defaults_file}. Method strings in
+config (for example \code{"print + str"} or \code{"stats::coef"}) are
+resolved to callable functions. In config expressions, \code{"+"} is treated
+as the method delimiter.
+
+Built-in class defaults (loaded from inst/extdata/snapshot-method-defaults.R)
+use broom functions for many statistical model classes. The default method
+is typically broom::tidy, with broom::glance and/or broom::augment
+added where supported (per the broom available-methods table at
+https://broom.tidymodels.org/articles/available-methods.html).
 }
 \examples{
 with_example({
   model <- stats::lm(mpg ~ wt, data = datasets::mtcars)
-  snapshot(model, "model_both", script_name = "analysis", method = "both")
-  snapshot(model, "model_print", script_name = "analysis", method = "print")
-  snapshot(model, "model_str", script_name = "analysis", method = "str")
+  snapshot(model, "model_default", script_name = "analysis")
+  snapshot(model, "model_multi", script_name = "analysis",
+           method = list(summary = summary, print = print))
+  snapshot(model, "model_print", script_name = "analysis", method = print)
+  snapshot(model, "model_ns", script_name = "analysis", method = stats::coef)
+  snapshot(model, "model_length", script_name = "analysis", method = length)
 })
 
 with_example({
