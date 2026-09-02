@@ -152,6 +152,77 @@ test_that("snapshot organizes by script name when specified", {
 })
 
 
+test_that("detect_script_name uses the active knitr input", {
+  skip_if_not_installed("knitr")
+
+  withr::with_tempdir({
+    input <- "quarto-input.qmd"
+    writeLines(
+      c(
+        "```{r}",
+        paste0(
+          "stopifnot(identical(resultcheck:::detect_script_name(), ",
+          "'quarto-input.qmd'))"
+        ),
+        "```"
+      ),
+      input
+    )
+
+    expect_no_error(
+      knitr::knit(input, output = "quarto-input.md", quiet = TRUE)
+    )
+  })
+})
+
+
+test_that("detect_script_name uses the active Quarto document", {
+  withr::with_envvar(
+    c(QUARTO_DOCUMENT_FILE = "/project/jupyter-input.qmd"),
+    expect_identical(
+      resultcheck:::detect_script_name(),
+      "jupyter-input.qmd"
+    )
+  )
+})
+
+
+test_that("Quarto creates missing snapshots and errors on mismatches", {
+  temp_project <- tempfile()
+  dir.create(temp_project)
+  dir.create(file.path(temp_project, ".git"))
+
+  on.exit(unlink(temp_project, recursive = TRUE))
+
+  withr::with_dir(temp_project, {
+    withr::with_envvar(c(QUARTO_DOCUMENT_FILE = "report.qmd"), {
+      expect_message(
+        snapshot(1, "quarto_snapshot"),
+        "New snapshot saved"
+      )
+
+      snapshot_file <- file.path(
+        temp_project,
+        "tests/_resultcheck_snaps",
+        "report.qmd",
+        "quarto_snapshot.md"
+      )
+      expect_true(file.exists(snapshot_file))
+      original_snapshot <- readLines(snapshot_file, warn = FALSE)
+
+      expect_error(
+        snapshot(2, "quarto_snapshot"),
+        "Quarto rendering stopped"
+      )
+      expect_identical(
+        readLines(snapshot_file, warn = FALSE),
+        original_snapshot
+      )
+    })
+  })
+})
+
+
 test_that("compare_snapshot_text ignores .Environment differences", {
   old_text <- c(
     "# Snapshot: lm",
@@ -201,6 +272,29 @@ test_that("serialize_value respects selected methods", {
   # methods are applied in provided order
   headers <- out_multi[grepl("^## ", out_multi)]
   expect_equal(headers, c("## summary", "## print", "## summary_again"))
+})
+
+
+test_that("serialize_value uses stable Unicode formatting", {
+  unicode_sensitive <- function(value) {
+    if (isTRUE(getOption("cli.unicode"))) {
+      cat("Unicode: × … ¹\n")
+    } else {
+      cat("ASCII: x ~ ~1\n")
+    }
+  }
+
+  unicode_output <- withr::with_options(
+    list(cli.unicode = TRUE),
+    resultcheck:::serialize_value(1, methods = unicode_sensitive)
+  )
+  ascii_output <- withr::with_options(
+    list(cli.unicode = FALSE),
+    resultcheck:::serialize_value(1, methods = unicode_sensitive)
+  )
+
+  expect_identical(ascii_output, unicode_output)
+  expect_true(any(grepl("Unicode: × … ¹", unicode_output, fixed = TRUE)))
 })
 
 
