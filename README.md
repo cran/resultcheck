@@ -102,12 +102,29 @@ You can override the default snapshot directory in `_resultcheck.yml`:
 
 ```yaml
 snapshot:
+  max_print: 1000
   dir: "custom/snapshots/path"
   method: "print + str"
   method_defaults_file: "snapshot-method-overrides.R"
   method_by_class:
     lm: "summary"
 ```
+
+`max_print` sets the base R printing limit for each snapshot method (default:
+1,000 entries). Set it in `_resultcheck.yml` rather than relying on the session's
+`options(max.print = ...)`. It must be a whole number from 1 to 2,147,483,647.
+The limit counts entries, not rows or bytes: a 200-row, seven-column data frame
+contains 1,400 entries and needs a higher limit, such as `max_print: 2000`. Larger base-printed objects may be truncated, with an
+omission notice; changes in omitted values may not be detected. Increase the
+limit when full output is needed, or select a meaningful summary method.
+Class-specific methods such as tibble printing can have their own limits, and
+custom methods can explicitly override the print limit. The caller's R options
+are restored afterwards.
+
+Snapshot serialization also temporarily sets `useFancyQuotes = FALSE`, so base R
+quotation marks (including model-summary significance legends) are consistent
+between interactive sessions and Quarto. The caller's setting is restored even
+if a snapshot method fails. Custom methods may explicitly choose other formatting.
 
 The `method` argument controls how the object is serialized:
 
