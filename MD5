@@ -1,7 +1,7 @@
-588487579ec309f9a6008d5bb0cdd7f7 *DESCRIPTION
+23402fb751ce1ef01604fc350ffd1aa9 *DESCRIPTION
 03324c6ab2415862f216befe85d6aa41 *LICENSE
 eecba407f622c4feca882a216aa87332 *NAMESPACE
-fcd7cdfe6a425a2b62dc90a8bb420790 *NEWS.md
+35a2c7e9066641fd65620e8215ef4d68 *NEWS.md
 a3ac374dd25895a158cdd7da9d5b8836 *R/internal.R
 8892842b762980edd378adc094701e7d *R/sandbox.R
 85fb388f07bc64ef76cf5fb6b5503387 *R/snapshot.R
@@ -21,7 +21,7 @@ f2a57d26a1c5b1f1249ea938a5b51322 *inst/doc/renv-github-actions.html
 88d0c881c1aa8ada2f29dd310656bd5e *inst/doc/snapshot-tolerance.html
 3f51b5b162332f906cb071a41a2db8d0 *inst/extdata/analysis.R
 61268440981f5e9974ea7ab8af7f367e *inst/extdata/data/income.csv
-6c8276018b8b474c2003d01dd58f3ee9 *inst/extdata/snapshot-method-defaults.R
+f0a948a64da27a6ba70b6b5a98db23f3 *inst/extdata/snapshot-method-defaults.R
 e92aea5f62885742fff57416b558b378 *inst/extdata/snapshot-method-defaults.yml
 b61f0cc99285883efe98a64536348802 *man/cleanup_sandbox.Rd
 3c12884202796ada68c1a99bbd03347c *man/compare_snapshot_text.Rd
@@ -46,7 +46,7 @@ fa064f3d442c055a5ed75d08a56d0886 *man/snapshot.Rd
 1e8af79f7856d666c6b3f5b32333660b *tests/testthat/test-example-project.R
 5bdcb69603bbce3da1004953ab5e2962 *tests/testthat/test-integration.R
 9f18346ea765903f6ab3dde81e0f9ddf *tests/testthat/test-sandbox.R
-ea711e58df8c887f2c8d13bd87d422dd *tests/testthat/test-snapshot.R
+05f1191c03c7b7071e7c11ec6dc479ad *tests/testthat/test-snapshot.R
 4ca07935207cd12c9010c07fcf9ef00b *vignettes/faq.Rmd
 6eae2249f016cedd5557fc158ade5cb9 *vignettes/img/r-tester.png
 c806dd8acba3cca57b1e3508dd53a085 *vignettes/renv-github-actions.Rmd
